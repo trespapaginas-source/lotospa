@@ -1,4 +1,4 @@
-
+<!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
@@ -24,18 +24,18 @@
             filter: blur(5px) brightness(0.8); /* Oscurece y difumina el fondo */
         }
 
-        /* Definición de la animación */
+        /* Definición de la animación de fondo */
         @keyframes subtle-move {
             0% { transform: scale(1.05) translate(0%, 0%); }
             50% { transform: scale(1.1) translate(1%, -1%); }
             100% { transform: scale(1.05) translate(-1%, 1%); }
         }
-
+        
         /* Ocultar scrollbar sin afectar la funcionalidad (opcional) */
         ::-webkit-scrollbar { display: none; }
         html { scroll-behavior: smooth; }
         
-        /* Ajuste de Aspect Ratio para el Tour Virtual (Nuevo) */
+        /* Ajuste de Aspect Ratio para el Tour Virtual */
         /* En móvil (por defecto), es más vertical (4:5) */
         #tour-wrapper { aspect-ratio: 4 / 5; }
         
@@ -43,6 +43,14 @@
         @media (min-width: 768px) {
             #tour-wrapper { aspect-ratio: 21 / 9; }
         }
+        
+        /* Estilos del botón de interacción central */
+        #tour-interact-overlay {
+            cursor: pointer;
+            transition: opacity 0.5s ease-out;
+        }
+
+        /* Se ha eliminado el estilo .text-360-glow */
     </style>
 </head>
 
@@ -139,7 +147,8 @@
 
             <!-- Iframe Wrapper con Aspect Ratio Ajustado para Móvil -->
             <div id="tour-wrapper" class="relative w-full rounded-2xl overflow-hidden shadow-2xl border border-stone-700 group">
-                <div class="absolute inset-0 pointer-events-none border-[1px] border-white/10 z-20 rounded-2xl"></div>
+                
+                <!-- IFRAME DEL TOUR 360 -->
                 <iframe 
                     src="https://tour.panoee.net/lotospa/690f5ade9709fe8e6e881bf9" 
                     class="w-full h-full bg-stone-800"
@@ -149,10 +158,26 @@
                     title="Loto Spa Virtual Tour"
                 ></iframe>
                 
-                <!-- Interactive hint overlay (se oculta al primer click/touch) -->
-                <div id="tour-hint" class="absolute bottom-6 right-6 bg-black/60 backdrop-blur-md text-white px-4 py-2 rounded-lg text-xs tracking-wider z-20 pointer-events-none border border-white/10 transition-opacity duration-300">
-                    CLICK & DRAG PARA EXPLORAR 360°
+                <!-- OVERLAY DE INTERACCIÓN: Este es el elemento que se toca y se oculta. -->
+                <div 
+                    id="tour-interact-overlay" 
+                    class="absolute inset-0 z-30 flex items-center justify-center bg-black/70 backdrop-blur-sm"
+                    onclick="hideTourHint()"
+                    ontouchstart="hideTourHint()"
+                >
+                    <!-- Contenido sutil y funcional solicitado por el usuario -->
+                    <div class="text-center p-4 bg-white/10 rounded-full border border-white/30 backdrop-blur-md shadow-lg transform hover:scale-105 transition-transform duration-300">
+                        <span class="block text-sm md:text-base font-bold text-white tracking-wider">
+                            TOCA PARA INICIAR EL TOUR
+                        </span>
+                        <span class="block text-xs font-light text-stone-300 mt-1">
+                            (Arrastra para girar y aplicar zoom)
+                        </span>
+                    </div>
                 </div>
+
+                <!-- Borde estético -->
+                <div class="absolute inset-0 pointer-events-none border-[1px] border-white/10 z-20 rounded-2xl"></div>
             </div>
             
             <div class="text-center mt-8">
@@ -377,8 +402,7 @@
         const mobileNav = document.getElementById('mobile-nav');
         const menuButton = document.getElementById('menu-button');
         const navLinks = document.querySelectorAll('.nav-link');
-        const tourWrapper = document.getElementById('tour-wrapper');
-        const tourHint = document.getElementById('tour-hint');
+        const tourInteractOverlay = document.getElementById('tour-interact-overlay'); 
 
         /**
          * Maneja el cambio de estilo del Header al hacer scroll.
@@ -435,14 +459,15 @@
         }
 
         /**
-         * Oculta el indicador del tour virtual al primer click o toque.
+         * Oculta el overlay de interacción del tour virtual al primer click o toque.
          */
         function hideTourHint() {
-            if (tourHint) {
-                tourHint.style.opacity = '0';
-                // Eliminar el event listener después de la primera ejecución
-                tourWrapper.removeEventListener('mousedown', hideTourHint);
-                tourWrapper.removeEventListener('touchstart', hideTourHint);
+            if (tourInteractOverlay) {
+                // Hace el overlay transparente y lo quita del flujo para que no interfiera más
+                tourInteractOverlay.style.opacity = '0';
+                setTimeout(() => {
+                    tourInteractOverlay.style.display = 'none';
+                }, 500); // 500ms para que la transición sea visible
             }
         }
 
@@ -450,10 +475,6 @@
         window.addEventListener('scroll', handleScroll);
         
         menuButton.addEventListener('click', () => toggleMenu());
-        
-        // Listener para ocultar el indicador del tour al interactuar
-        tourWrapper.addEventListener('mousedown', hideTourHint);
-        tourWrapper.addEventListener('touchstart', hideTourHint);
         
         // Ejecutar handleScroll al cargar para aplicar el estilo inicial si no estamos en el top
         handleScroll(); 
